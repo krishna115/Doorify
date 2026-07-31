@@ -37,19 +37,19 @@ export interface Order {
   updated_at: string;
 }
 
-export interface OrderCustomization {
-  id: string;
+// export interface OrderCustomization {
+//   id: string;
 
-  order_id: string;
+//   order_id: string;
 
-  instruction: string;
+//   instruction: string;
 
-  is_completed: boolean;
+//   is_completed: boolean;
 
-  completed_by?: string;
+//   completed_by?: string;
 
-  completed_at?: string;
-}
+//   completed_at?: string;
+// }
 
 export interface OrderLog {
   id: string;
@@ -82,7 +82,6 @@ export interface CreateOrderRequest {
 
   inventory_id?: string;
 
-  customizations: string[];
 }
 
 export interface UpdateOrderRequest {
@@ -103,16 +102,16 @@ export interface UpdateOrderRequest {
   status: OrderStatus;
 }
 
-export interface OrderCustomization {
 
-  id: string;
+export interface CustomizationItem {
 
-  order_id: string;
+  instruction: string;
 
-  title: string;
+  image: File | null;
+
+  preview: string;
 
 }
-
 
 
 export interface OrderDetails {
@@ -123,4 +122,24 @@ export interface OrderDetails {
 
   logs: OrderLog[];
 
+}
+
+export interface OrderCustomization {
+  id: string;
+
+  order_id: string;
+
+  instruction: string;
+
+  image_url: string | null;
+
+  image?: string;
+
+  is_completed: boolean;
+
+  completed_by: string | null;
+
+  completed_at: string | null;
+
+  created_at: string;
 }

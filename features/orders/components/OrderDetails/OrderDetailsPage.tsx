@@ -122,10 +122,10 @@ export function OrderDetailsPage({
       </div>
 
       <CustomizationCard
-        customizations={
-          details.customizations
-        }
-      />
+    customizations={details.customizations}
+    editable={true}
+    onRefresh={loadOrder}
+/>
 
      <OrderTimeline
   logs={details.logs.map((log) => ({

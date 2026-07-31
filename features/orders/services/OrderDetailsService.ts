@@ -2,6 +2,8 @@ import {
   OrderDetails,
 } from "../types";
 
+import { OrderCustomizationService } from "./OrderCustomizationService";
+
 export class OrderDetailsService {
 
   static async getById(
@@ -19,12 +21,18 @@ export class OrderDetailsService {
     if (!response.ok) {
 
       throw new Error(
-        data.message
+        data.message ??
+        "Failed to load order."
       );
 
     }
 
-    return data;
+    data.customizations =
+      await OrderCustomizationService.getByOrder(
+        id
+      );
+
+    return data as OrderDetails;
 
   }
 

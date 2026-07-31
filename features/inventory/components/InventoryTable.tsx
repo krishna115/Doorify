@@ -48,7 +48,7 @@ export function InventoryTable({
         <TableRow>
 
           <TableHead>
-            Size
+            Name
           </TableHead>
 
           <TableHead className="text-right">

@@ -1,18 +1,27 @@
 "use client";
 
-import { CustomizationList } from "../CustomizationList";
+import { CustomizationItem } from "../../types";
+import {
+  CustomizationList,
+} from "../CustomizationList";
 
 interface Props {
-  value: string[];
 
-  onChange: (value: string[]) => void;
+  value: CustomizationItem[];
+
+  onChange: (
+    value: CustomizationItem[]
+  ) => void;
+
 }
 
 export function CustomizationSection({
   value,
   onChange,
 }: Props) {
+
   return (
+
     <div className="space-y-2">
 
       <CustomizationList
@@ -21,5 +30,7 @@ export function CustomizationSection({
       />
 
     </div>
+
   );
+
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   CreateOrderRequest,
+  CustomizationItem,
   Order,
   OrderService,
   UpdateOrderRequest,
@@ -33,6 +34,7 @@ import { OrderDetailsSection } from "./OrderDetailsSection";
 import { OrderStatusSection } from "./OrderStatusSection";
 
 import { CustomizationSection } from "./CustomizationSection";
+import { OrderCustomizationService } from "../../services/OrderCustomizationService";
 
 interface Props {
   open: boolean;
@@ -101,11 +103,10 @@ export function OrderDialog({
       | "completed"
       | "cancelled"
     >("pending");
-
-  const [
-    customizations,
-    setCustomizations,
-  ] = useState<string[]>([]);
+const [
+  customizations,
+  setCustomizations,
+] = useState<CustomizationItem[]>([]);
 
   function resetForm() {
     setCustomerName("");
@@ -281,6 +282,9 @@ let exceedsInventory =
         await OrderService.update(
           request
         );
+
+        await OrderCustomizationService.save(order!.id,customizations);
+
       } else {
         const request: CreateOrderRequest =
           {
@@ -305,12 +309,13 @@ let exceedsInventory =
             estimated_days:
               estimatedDays,
 
-            customizations,
           };
 
-        await OrderService.create(
+        const createdOrder = await OrderService.create(
           request
         );
+
+        await OrderCustomizationService.save(createdOrder.id,customizations);
       }
 
       await loadInventory();
@@ -336,8 +341,7 @@ let exceedsInventory =
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-w-3xl">
-
+<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
 
           <DialogTitle>
