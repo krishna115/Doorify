@@ -1,6 +1,16 @@
 "use client";
 
-import { Order } from "../..";
+import { useEffect, useState } from "react";
+
+import {
+  Order,
+} from "../..";
+
+import {
+    Inventory,
+  InventoryLookupItem,
+  InventoryService,
+} from "@/features/inventory";
 
 import {
   Card,
@@ -16,7 +26,70 @@ interface Props {
 export function DoorDetailsCard({
   order,
 }: Props) {
+
+  const [
+    inventory,
+    setInventory,
+  ] = useState<
+    Inventory[]
+  >([]);
+
+  /*
+  ---------------------------------------
+  Load Inventory
+  ---------------------------------------
+  */
+
+  useEffect(() => {
+
+    async function load() {
+
+      try {
+
+        const data =
+          await InventoryService.getAll();
+
+        setInventory(
+          data
+        );
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+      }
+
+    }
+
+    load();
+
+  }, []);
+
+  /*
+  ---------------------------------------
+  Helpers
+  ---------------------------------------
+  */
+
+  function getDoorName(
+    inventoryId: string | null
+  ) {
+
+    return (
+      inventory.find(
+        (item) =>
+          item.id ===
+          inventoryId
+      )?.name ??
+      inventoryId
+    );
+
+  }
+
   return (
+
     <Card>
 
       <CardHeader>
@@ -29,54 +102,110 @@ export function DoorDetailsCard({
 
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent>
 
-        <div className="flex justify-between">
+        {order.doors.length ===
+        0 ? (
 
-          <span className="text-muted-foreground">
-            Size
-          </span>
+          <p className="text-sm text-muted-foreground">
 
-          <span className="font-medium">
+            No doors added.
 
-            {order.height}"
-            {" × "}
-            {order.width}"
+          </p>
 
-          </span>
+        ) : (
 
-        </div>
+          <div className="space-y-4">
 
-        <div className="flex justify-between">
+            {order.doors.map(
+              (
+                door,
+                index
+              ) => (
 
-          <span className="text-muted-foreground">
-            Quantity
-          </span>
+                <div
+                  key={index}
+                  className="rounded-lg border p-4"
+                >
 
-          <span className="font-medium">
+                  <div className="mb-3 font-medium">
 
-            {order.quantity}
+                    Door{" "}
+                    {index + 1}
 
-          </span>
+                  </div>
 
-        </div>
+                  <div className="space-y-2">
 
-        <div className="flex justify-between">
+                    <div className="flex justify-between">
 
-          <span className="text-muted-foreground">
-            Inventory ID
-          </span>
+                      <span className="text-muted-foreground">
 
-          <span className="font-medium text-xs">
+                        Door Size
 
-            {order.inventory_id}
+                      </span>
 
-          </span>
+                      <span className="font-medium">
 
-        </div>
+                        {getDoorName(
+                          door.inventory_id
+                        )}
+
+                      </span>
+
+                    </div>
+
+                    <div className="flex justify-between">
+
+                      <span className="text-muted-foreground">
+
+                        Inventory ID
+
+                      </span>
+
+                      <span className="font-medium text-xs break-all">
+
+                        {
+                          door.inventory_id
+                        }
+
+                      </span>
+
+                    </div>
+
+                    <div className="flex justify-between">
+
+                      <span className="text-muted-foreground">
+
+                        Quantity
+
+                      </span>
+
+                      <span className="font-medium">
+
+                        {
+                          door.quantity
+                        }
+
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              )
+            )}
+
+          </div>
+
+        )}
 
       </CardContent>
 
     </Card>
+
   );
+
 }

@@ -7,6 +7,7 @@ export async function GET() {
   .from("inventory")
   .select(`
     id,
+    name,
     width,
     height,
     reserved_quantity,

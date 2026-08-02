@@ -5,6 +5,13 @@ export type OrderStatus =
   | "completed"
   | "cancelled";
 
+export interface OrderDoor {
+  inventory_id: string | null;
+
+  quantity: number;
+  name?: string 
+}
+
 export interface Order {
   id: string;
 
@@ -14,29 +21,15 @@ export interface Order {
 
   customer_phone: string;
 
-  door_image?: string;
-
-  height: number;
-
-  width: number;
-
-  quantity: number;
-
-  estimated_days?: number;
-
   status: OrderStatus;
 
-  inventory_id?: string;
+  estimated_days: number | null;
 
-  created_by?: string;
-
-  assigned_to?: string;
+  doors: OrderDoor[];
 
   created_at: string;
-
-  updated_at: string;
+  total_amount: number;
 }
-
 // export interface OrderCustomization {
 //   id: string;
 
@@ -66,40 +59,33 @@ export interface OrderLog {
 }
 
 export interface CreateOrderRequest {
+
   customer_name: string;
 
   customer_phone: string;
 
-  door_image?: string;
-
-  height: number;
-
-  width: number;
-
-  quantity: number;
-
   estimated_days?: number;
 
-  inventory_id?: string;
+  doors: OrderDoor[];
+  total_amount: number;
+  amount_paid: number;
 
 }
 
 export interface UpdateOrderRequest {
+
   id: string;
 
   customer_name: string;
 
   customer_phone: string;
 
-  height: number;
-
-  width: number;
-
-  quantity: number;
-
-  estimated_days?: number;
+  estimated_days: number | null;
 
   status: OrderStatus;
+
+  doors: OrderDoor[];
+
 }
 
 
@@ -142,4 +128,34 @@ export interface OrderCustomization {
   completed_at: string | null;
 
   created_at: string;
+}
+
+export interface Payment {
+
+  id: string;
+
+  order_id: string;
+
+  amount: number;
+
+  payment_method: string | null;
+
+  note: string | null;
+
+  received_by: string | null;
+
+  received_at: string;
+
+}
+
+export interface CreatePaymentRequest {
+
+  orderId: string;
+
+  amount: number;
+
+  paymentMethod?: string | null;
+
+  note?: string;
+
 }

@@ -47,10 +47,15 @@ export function OrdersTable({
   onDelete,
   onAccept,
 }: Props) {
+
   return (
+
     <Table>
+
       <TableHeader>
+
         <TableRow>
+
           <TableHead>
             #
           </TableHead>
@@ -60,11 +65,11 @@ export function OrdersTable({
           </TableHead>
 
           <TableHead>
-            Size
+            Doors
           </TableHead>
 
           <TableHead>
-            Qty
+            Total Qty
           </TableHead>
 
           <TableHead>
@@ -78,7 +83,9 @@ export function OrdersTable({
           <TableHead className="text-right">
             Actions
           </TableHead>
+
         </TableRow>
+
       </TableHeader>
 
       <TableBody>
@@ -98,125 +105,142 @@ export function OrdersTable({
 
         )}
 
-        {orders.map((order) => (
+        {orders.map((order) => {
 
-          <TableRow key={order.id}>
+          const totalQuantity =
+            order.doors.reduce(
+              (sum, door) =>
+                sum + door.quantity,
+              0
+            );
 
-            <TableCell>
-              #{order.order_number}
-            </TableCell>
+          return (
 
-            <TableCell>
+            <TableRow key={order.id}>
 
-              <div>
+              <TableCell>
+                #{order.order_number}
+              </TableCell>
 
-                <p className="font-medium">
-                  {order.customer_name}
-                </p>
+              <TableCell>
 
-                <p className="text-xs text-muted-foreground">
-                  {order.customer_phone}
-                </p>
+                <div>
 
-              </div>
+                  <p className="font-medium">
+                    {order.customer_name}
+                  </p>
 
-            </TableCell>
+                  <p className="text-xs text-muted-foreground">
+                    {order.customer_phone}
+                  </p>
 
-            <TableCell>
+                </div>
 
-              {order.height}"
-              {" × "}
-              {order.width}"
+              </TableCell>
 
-            </TableCell>
+              <TableCell>
 
-            <TableCell>
+                {order.doors.length}
 
-              {order.quantity}
+                {" "}
 
-            </TableCell>
+                {order.doors.length === 1
+                  ? "Door"
+                  : "Doors"}
 
-            <TableCell>
+              </TableCell>
 
-              <OrderStatusBadge
-                status={order.status}
-              />
+              <TableCell>
 
-            </TableCell>
+                {totalQuantity}
 
-            <TableCell>
+              </TableCell>
 
-              {order.estimated_days
-                ? `${order.estimated_days} Days`
-                : "--"}
+              <TableCell>
 
-            </TableCell>
+                <OrderStatusBadge
+                  status={order.status}
+                />
 
-            <TableCell className="text-right space-x-2">
+              </TableCell>
 
-              <Button
-                size="sm"
-                variant="outline"
-              >
+              <TableCell>
 
-                <Link
-                  href={`${basePath}/${order.id}`}
-                >
-                  View
-                </Link>
+                {order.estimated_days
+                  ? `${order.estimated_days} Days`
+                  : "--"}
 
-              </Button>
+              </TableCell>
 
-              {permissions.canAccept &&
-                order.status === "pending" && (
-
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    onAccept?.(order)
-                  }
-                >
-                  Accept
-                </Button>
-
-              )}
-
-              {permissions.canEdit && (
+              <TableCell className="text-right space-x-2">
 
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() =>
-                    onEdit?.(order)
-                  }
                 >
-                  Edit
+
+                  <Link
+                    href={`${basePath}/${order.id}`}
+                  >
+                    View
+                  </Link>
+
                 </Button>
 
-              )}
+                {permissions.canAccept &&
+                  order.status === "pending" && (
 
-              {permissions.canDelete && (
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      onAccept?.(order)
+                    }
+                  >
+                    Accept
+                  </Button>
 
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() =>
-                    onDelete?.(order)
-                  }
-                >
-                  Delete
-                </Button>
+                )}
 
-              )}
+                {permissions.canEdit && (
 
-            </TableCell>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      onEdit?.(order)
+                    }
+                  >
+                    Edit
+                  </Button>
 
-          </TableRow>
+                )}
 
-        ))}
+                {permissions.canDelete && (
+
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() =>
+                      onDelete?.(order)
+                    }
+                  >
+                    Delete
+                  </Button>
+
+                )}
+
+              </TableCell>
+
+            </TableRow>
+
+          );
+
+        })}
 
       </TableBody>
 
     </Table>
+
   );
+
 }

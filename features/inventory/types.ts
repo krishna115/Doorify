@@ -6,6 +6,7 @@ export interface Inventory {
   height: number;
 
   quantity: number;
+  name: string;
 
   reserved_quantity: number;
 
@@ -24,6 +25,7 @@ export interface InventoryLookupItem {
   height: number;
 
   quantity: number;
+  name: string;
 
   reserved_quantity: number;
 

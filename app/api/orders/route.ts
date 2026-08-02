@@ -2,153 +2,52 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { admin } from "@/lib/admin";
 
-async function getInventory(
-  inventoryId: string
-) {
-  const { data, error } = await admin
-    .from("inventory")
-    .select("*")
-    .eq("id", inventoryId)
-    .single();
+import {
+  requireAuth,
+} from "@/lib/auth";
 
-  if (error || !data) {
-    throw new Error(
-      "Inventory not found."
-    );
-  }
+import {
+  reserveDoors,
+  consumeDoors,
+  releaseDoors,
+  adjustDoorReservations,
+} from "@/features/orders/server/inventory";
 
-  return data;
-}
-
-async function reserveInventory(
-  inventoryId: string,
-  quantity: number
-) {
-  const inventory =
-    await getInventory(inventoryId);
-
-  const available =
-    inventory.quantity -
-    inventory.reserved_quantity;
-
-  if (quantity > available) {
-    throw new Error(
-      `Only ${available} doors available.`
-    );
-  }
-
-  await admin
-    .from("inventory")
-    .update({
-      reserved_quantity:
-        inventory.reserved_quantity +
-        quantity,
-    })
-    .eq("id", inventoryId);
-}
-
-async function releaseReservation(
-  inventoryId: string,
-  quantity: number
-) {
-  const inventory =
-    await getInventory(inventoryId);
-
-  await admin
-    .from("inventory")
-    .update({
-      reserved_quantity: Math.max(
-        0,
-        inventory.reserved_quantity -
-          quantity
-      ),
-    })
-    .eq("id", inventoryId);
-}
-
-async function consumeInventory(
-  inventoryId: string,
-  quantity: number
-) {
-  const inventory =
-    await getInventory(inventoryId);
-
-  await admin
-    .from("inventory")
-    .update({
-      quantity:
-        inventory.quantity -
-        quantity,
-
-      reserved_quantity:
-        inventory.reserved_quantity -
-        quantity,
-    })
-    .eq("id", inventoryId);
-}
-
-async function addInventoryTransaction(
-  inventoryId: string,
-  quantity: number,
-  type: string,
-  note: string
-) {
-  await admin
-    .from("inventory_transactions")
-    .insert({
-      inventory_id:
-        inventoryId,
-
-      quantity,
-
-      type,
-
-      note,
-    });
-}
-
-async function addOrderLog(
-  orderId: string,
-  action: string,
-  description: string
-) {
-  await admin
-    .from("order_logs")
-    .insert({
-      order_id: orderId,
-
-      action,
-
-      description,
-    });
-}
+import {
+  createOrderLog,
+  OrderLogs,
+} from "@/features/orders/server/orderLogs";
+import { PaymentService } from "@/features/orders/services/PaymentService";
 
 export async function GET() {
+
   try {
+
     const { data, error } =
       await admin
         .from("orders")
         .select("*")
-        .order("created_at", {
-          ascending: false,
-        });
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        );
 
     if (error) {
-      return NextResponse.json(
-        {
-          message:
-            error.message,
-        },
-        {
-          status: 400,
-        }
-      );
+
+      throw error;
+
     }
 
     return NextResponse.json(
       data
     );
-  } catch {
+
+  } catch (e) {
+
+    console.error(e);
+
     return NextResponse.json(
       {
         message:
@@ -158,41 +57,57 @@ export async function GET() {
         status: 500,
       }
     );
+
   }
+
 }
 
 export async function POST(
   request: NextRequest
 ) {
+
   try {
-    const body = await request.json();
+
+    console.log("========== CREATE ORDER ==========");
+
+    const currentUser =
+      await requireAuth();
+
+    console.log(
+      "STEP 1 : Current User",
+      currentUser
+    );
+
+    const body =
+      await request.json();
+
+    console.log(
+      "STEP 2 : Body Received",
+      body
+    );
 
     const {
-      inventory_id,
+
       customer_name,
+
       customer_phone,
-      width,
-      height,
-      quantity,
+
       estimated_days,
-      customizations,
+
+      doors,
+      total_amount,
+      amount_paid
+
     } = body;
 
-    if (!inventory_id) {
-      return NextResponse.json(
-        {
-          message:
-            "Please select a door size.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+    /*
+    ----------------------------------
+    Validation
+    ----------------------------------
+    */
 
-    if (
-      !customer_name?.trim()
-    ) {
+    if (!customer_name?.trim()) {
+
       return NextResponse.json(
         {
           message:
@@ -202,150 +117,228 @@ export async function POST(
           status: 400,
         }
       );
+
     }
 
-    if (
-      quantity <= 0
-    ) {
+    if (!customer_phone?.trim()) {
+
       return NextResponse.json(
         {
           message:
-            "Quantity should be greater than zero.",
+            "Customer phone is required.",
         },
         {
           status: 400,
         }
       );
+
     }
-
-    const inventory =
-      await getInventory(
-        inventory_id
-      );
-
-    const available =
-      inventory.quantity -
-      inventory.reserved_quantity;
 
     if (
-      quantity > available
+      !Array.isArray(
+        doors
+      ) ||
+      doors.length === 0
     ) {
-      return NextResponse.json(
-        {
-          message: `Only ${available} doors available.`,
-        },
-        {
-          status: 400,
-        }
-      );
-    }
 
-    const {
-      data: order,
-      error,
-    } = await admin
-      .from("orders")
-      .insert({
-        inventory_id,
-
-        customer_name,
-
-        customer_phone,
-
-        width,
-
-        height,
-
-        quantity,
-
-        estimated_days,
-
-        status: "pending",
-      })
-      .select()
-      .single();
-
-    if (error) {
       return NextResponse.json(
         {
           message:
-            error.message,
+            "Please add at least one door.",
         },
         {
           status: 400,
         }
       );
+
     }
 
-    try {
-      // Reserve inventory
-
-      await reserveInventory(
-        inventory_id,
-        quantity
-      );
-
-      await addInventoryTransaction(
-        inventory_id,
-        quantity,
-        "reserve",
-        `Reserved for Order #${order.order_number}`
-      );
-
-      // Customizations
+    for (const door of doors) {
 
       if (
-        customizations &&
-        customizations.length > 0
+        !door.inventory_id
       ) {
-        const rows =
-          customizations.map(
-            (
-              item: string
-            ) => ({
-              order_id:
-                order.id,
 
-              title: item,
-            })
-          );
+        return NextResponse.json(
+          {
+            message:
+              "Please select a door size.",
+          },
+          {
+            status: 400,
+          }
+        );
 
-        await admin
-          .from(
-            "order_customizations"
-          )
-          .insert(rows);
       }
 
-      await addOrderLog(
-        order.id,
-        "Order Created",
-        "Order created successfully."
+      if (
+        door.quantity <= 0
+      ) {
+
+        return NextResponse.json(
+          {
+            message:
+              "Door quantity should be greater than zero.",
+          },
+          {
+            status: 400,
+          }
+        );
+
+      }
+
+    }
+
+    console.log(
+      "STEP 3 : Validation Passed"
+    );
+
+    /*
+    ----------------------------------
+    Create Order First
+    ----------------------------------
+    */
+
+    const {
+
+      data: order,
+
+      error,
+
+    } =
+      await admin
+        .from("orders")
+        .insert({
+
+          customer_name,
+
+          customer_phone,
+
+          estimated_days,
+
+          status:
+            "pending",
+
+          doors,
+          total_amount,
+
+          created_by:
+            currentUser.id,
+
+        })
+        .select()
+        .single();
+
+    if (error) {
+
+      console.error(
+        "Create Order Error",
+        error
       );
 
-      await addOrderLog(
-        order.id,
-        "Inventory Reserved",
-        `${quantity} doors reserved.`
+      throw error;
+
+    }
+
+    console.log(
+      "STEP 4 : Order Created",
+      order
+    );
+
+    /*
+    ----------------------------------
+    Reserve Inventory
+    ----------------------------------
+    */
+
+    try {
+
+      await reserveDoors(
+
+        doors,
+
+        order.order_number
+
       );
 
-      return NextResponse.json(
-        order
+      console.log(
+        "STEP 5 : Inventory Reserved"
       );
+
     } catch (e) {
-      // Rollback
+
+      console.error(
+        "Inventory Reservation Failed",
+        e
+      );
 
       await admin
         .from("orders")
         .delete()
-        .eq("id", order.id);
+        .eq(
+          "id",
+          order.id
+        );
 
       throw e;
+
     }
+
+    /*
+    ----------------------------------
+    Logs
+    ----------------------------------
+    */
+
+    OrderLogs.orderCreated(order.id, order.order_number, currentUser.id);
+
+
+    console.log(
+      "STEP 6 : Order Log Added"
+    );
+
+    await createOrderLog(
+
+      order.id,
+
+      "Inventory Reserved",
+
+      "Inventory reserved successfully.",
+
+      currentUser.id
+
+    );
+
+    console.log(
+      "STEP 7 : Inventory Log Added"
+    );
+
+    console.log(
+      "========== ORDER CREATED =========="
+    );
+
+
+
+    return NextResponse.json(
+      order
+    );
+
   } catch (e) {
+
+    console.error(
+      "POST ERROR"
+    );
+
+    console.error(e);
+
     if (
       e instanceof Error
     ) {
+
+      console.error(
+        e.stack
+      );
+
       return NextResponse.json(
         {
           message:
@@ -355,6 +348,7 @@ export async function POST(
           status: 400,
         }
       );
+
     }
 
     return NextResponse.json(
@@ -366,306 +360,79 @@ export async function POST(
         status: 500,
       }
     );
+
   }
+
 }
 
 export async function PUT(
   request: NextRequest
 ) {
+
   try {
-    const body = await request.json();
+
+    console.log("========== UPDATE ORDER ==========");
+
+    const currentUser =
+      await requireAuth();
+
+    console.log(
+      "STEP 1 : Current User",
+      currentUser
+    );
+
+    const body =
+      await request.json();
+
+    console.log(
+      "STEP 2 : Body",
+      body
+    );
 
     const {
+
       id,
-      inventory_id,
+
       customer_name,
+
       customer_phone,
-      width,
-      height,
-      quantity,
+
       estimated_days,
+
       status,
+
+      doors,
+      total_amount
+
     } = body;
 
+    /*
+    ----------------------------------
+    Get Existing Order
+    ----------------------------------
+    */
+
     const {
+
       data: existing,
+
       error: existingError,
-    } = await admin
-      .from("orders")
-      .select("*")
-      .eq("id", id)
-      .single();
 
-    if (existingError || !existing) {
-      return NextResponse.json(
-        {
-          message: "Order not found.",
-        },
-        {
-          status: 404,
-        }
-      );
-    }
-
-    /*
-    -----------------------------------
-    Reservation Adjustment
-    -----------------------------------
-    */
-
-    if (
-      existing.status !== "manufacturing" &&
-      existing.status !== "completed"
-    ) {
-
-      /*
-      Door Size Changed
-      */
-
-      if (
-        existing.inventory_id !== inventory_id
-      ) {
-
-        await releaseReservation(
-          existing.inventory_id,
-          existing.quantity
-        );
-
-        await addInventoryTransaction(
-          existing.inventory_id,
-          existing.quantity,
-          "unreserve",
-          `Moved to another door size (Order #${existing.order_number})`
-        );
-
-        await reserveInventory(
-          inventory_id,
-          quantity
-        );
-
-        await addInventoryTransaction(
-          inventory_id,
-          quantity,
-          "reserve",
-          `Reserved for Order #${existing.order_number}`
-        );
-
-      }
-
-      /*
-      Same Door Size
-
-      Quantity Changed
-      */
-
-      else {
-
-        const difference =
-          quantity -
-          existing.quantity;
-
-        if (difference > 0) {
-
-          await reserveInventory(
-            inventory_id,
-            difference
-          );
-
-          await addInventoryTransaction(
-            inventory_id,
-            difference,
-            "reserve",
-            `Extra reservation for Order #${existing.order_number}`
-          );
-
-        }
-
-        if (difference < 0) {
-
-          await releaseReservation(
-            inventory_id,
-            Math.abs(difference)
-          );
-
-          await addInventoryTransaction(
-            inventory_id,
-            Math.abs(difference),
-            "unreserve",
-            `Reservation reduced for Order #${existing.order_number}`
-          );
-
-        }
-
-      }
-
-    }
-
-    /*
-    -----------------------------------
-    Manufacturing Started
-    -----------------------------------
-    */
-
-    if (
-      existing.status !== "manufacturing" &&
-      status === "manufacturing"
-    ) {
-
-      await consumeInventory(
-        inventory_id,
-        quantity
-      );
-
-      await addInventoryTransaction(
-        inventory_id,
-        quantity,
-        "consume",
-        `Manufacturing Order #${existing.order_number}`
-      );
-
-      await addOrderLog(
-        id,
-        "Manufacturing Started",
-        "Inventory consumed."
-      );
-
-    }
-
-    /*
-    -----------------------------------
-    Cancelled
-    -----------------------------------
-    */
-
-    if (
-      existing.status !== "cancelled" &&
-      status === "cancelled" &&
-      existing.status !== "manufacturing" &&
-      existing.status !== "completed"
-    ) {
-
-      await releaseReservation(
-        inventory_id,
-        quantity
-      );
-
-      await addInventoryTransaction(
-        inventory_id,
-        quantity,
-        "unreserve",
-        `Cancelled Order #${existing.order_number}`
-      );
-
-      await addOrderLog(
-        id,
-        "Cancelled",
-        "Inventory released."
-      );
-
-    }
-
-    const { error } =
+    } =
       await admin
         .from("orders")
-        .update({
-          inventory_id,
+        .select("*")
+        .eq(
+          "id",
+          id
+        )
+        .single();
 
-          customer_name,
+    if (
+      existingError ||
+      !existing
+    ) {
 
-          customer_phone,
-
-          width,
-
-          height,
-
-          quantity,
-
-          estimated_days,
-
-          status,
-
-          updated_at:
-            new Date().toISOString(),
-        })
-        .eq("id", id);
-
-    if (error) {
-      return NextResponse.json(
-        {
-          message: error.message,
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    await addOrderLog(
-      id,
-      "Order Updated",
-      "Order updated."
-    );
-
-    return NextResponse.json({
-      success: true,
-    });
-
-  } catch (e) {
-
-    if (e instanceof Error) {
-      return NextResponse.json(
-        {
-          message: e.message,
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        message: "Something went wrong.",
-      },
-      {
-        status: 500,
-      }
-    );
-
-  }
-}
-
-export async function DELETE(
-  request: NextRequest
-) {
-  try {
-    const id =
-      request.nextUrl.searchParams.get(
-        "id"
-      );
-
-    if (!id) {
-      return NextResponse.json(
-        {
-          message:
-            "Order id is required.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    const {
-      data: order,
-      error: orderError,
-    } = await admin
-      .from("orders")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (orderError || !order) {
       return NextResponse.json(
         {
           message:
@@ -675,58 +442,418 @@ export async function DELETE(
           status: 404,
         }
       );
+
     }
 
+    console.log(
+      "STEP 3 : Existing Order Loaded"
+    );
+
     /*
-    ---------------------------------------
-    Prevent deleting manufactured orders
-    ---------------------------------------
+    ----------------------------------
+    Update Reservations
+    ----------------------------------
     */
 
     if (
-      order.status ===
-        "manufacturing" ||
-      order.status ===
+
+      existing.status !==
+        "manufacturing" &&
+
+      existing.status !==
         "completed"
+
     ) {
+
+      await adjustDoorReservations(
+
+        existing.doors,
+
+        doors,
+
+        existing.order_number
+
+      );
+
+      console.log(
+        "STEP 4 : Reservations Updated"
+      );
+
+    }
+
+    /*
+    ----------------------------------
+    Manufacturing Started
+    ----------------------------------
+    */
+
+    let assignedTo =
+      existing.assigned_to;
+
+    if (
+
+      existing.status !==
+        "manufacturing" &&
+
+      status ===
+        "manufacturing"
+
+    ) {
+
+      await consumeDoors(
+
+        doors,
+
+        existing.order_number
+
+      );
+
+      console.log(
+        "STEP 5 : Inventory Consumed"
+      );
+
+      assignedTo =
+        currentUser.id;
+
+      await createOrderLog(
+
+        id,
+
+        "Manufacturing Started",
+
+        "Inventory consumed.",
+
+        currentUser.id
+
+      );
+
+      console.log(
+        "STEP 6 : Manufacturing Log Added"
+      );
+
+    }
+
+    /*
+    ----------------------------------
+    Cancelled
+    ----------------------------------
+    */
+
+    if (
+
+      existing.status !==
+        "cancelled" &&
+
+      status ===
+        "cancelled" &&
+
+      existing.status !==
+        "manufacturing" &&
+
+      existing.status !==
+        "completed"
+
+    ) {
+
+      await releaseDoors(
+
+        existing.doors,
+
+        existing.order_number
+
+      );
+
+      console.log(
+        "STEP 7 : Inventory Released"
+      );
+
+      await createOrderLog(
+
+        id,
+
+        "Cancelled",
+
+        "Inventory released.",
+
+        currentUser.id
+
+      );
+
+      console.log(
+        "STEP 8 : Cancel Log Added"
+      );
+
+    }
+
+    /*
+    ----------------------------------
+    Update Order
+    ----------------------------------
+    */
+
+    const {
+
+      error,
+
+    } =
+      await admin
+        .from("orders")
+        .update({
+
+          customer_name,
+
+          customer_phone,
+
+          estimated_days,
+
+          status,
+
+          doors,
+          total_amount,
+
+          assigned_to:
+            assignedTo,
+
+          updated_at:
+            new Date().toISOString(),
+
+        })
+        .eq(
+          "id",
+          id
+        );
+
+    if (error) {
+
+      console.error(
+        "Update Error",
+        error
+      );
+
+      throw error;
+
+    }
+
+    console.log(
+      "STEP 9 : Order Updated"
+    );
+
+
+    
+    await createOrderLog(
+
+      id,
+
+      "Order Updated",
+
+      "Order updated successfully.",
+
+      currentUser.id
+
+    );
+
+    console.log(
+      "STEP 10 : Update Log Added"
+    );
+
+    console.log(
+      "========== ORDER UPDATED =========="
+    );
+
+    return NextResponse.json({
+
+      success: true,
+
+    });
+
+  } catch (e) {
+
+    console.error(
+      "PUT ERROR"
+    );
+
+    console.error(e);
+
+    if (
+      e instanceof Error
+    ) {
+
+      console.error(
+        e.stack
+      );
+
+      return NextResponse.json(
+
+        {
+          message:
+            e.message,
+        },
+
+        {
+          status: 400,
+        }
+
+      );
+
+    }
+
+    return NextResponse.json(
+
+      {
+        message:
+          "Something went wrong.",
+      },
+
+      {
+        status: 500,
+      }
+
+    );
+
+  }
+
+}
+
+export async function DELETE(
+  request: NextRequest
+) {
+
+  try {
+
+    console.log("========== DELETE ORDER ==========");
+
+    const currentUser =
+      await requireAuth();
+
+    console.log(
+      "STEP 1 : Current User",
+      currentUser
+    );
+
+    const id =
+      request.nextUrl.searchParams.get(
+        "id"
+      );
+
+    if (!id) {
+
       return NextResponse.json(
         {
           message:
-            "Manufacturing/Completed orders cannot be deleted.",
+            "Order id is required.",
         },
         {
           status: 400,
         }
       );
+
+    }
+
+    console.log(
+      "STEP 2 : Order Id",
+      id
+    );
+
+    /*
+    ----------------------------------------
+    Get Order
+    ----------------------------------------
+    */
+
+    const {
+
+      data: order,
+
+      error: orderError,
+
+    } =
+      await admin
+        .from("orders")
+        .select("*")
+        .eq(
+          "id",
+          id
+        )
+        .single();
+
+    if (
+      orderError ||
+      !order
+    ) {
+
+      return NextResponse.json(
+        {
+          message:
+            "Order not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+
+    }
+
+    console.log(
+      "STEP 3 : Order Loaded"
+    );
+
+    /*
+    ----------------------------------------
+    Prevent deleting manufactured orders
+    ----------------------------------------
+    */
+
+    if (
+
+      order.status ===
+        "manufacturing" ||
+
+      order.status ===
+        "completed"
+
+    ) {
+
+      return NextResponse.json(
+        {
+          message:
+            "Manufacturing or completed orders cannot be deleted.",
+        },
+        {
+          status: 400,
+        }
+      );
+
     }
 
     /*
-    ---------------------------------------
-    Release reservation
-    ---------------------------------------
+    ----------------------------------------
+    Release Reserved Inventory
+    ----------------------------------------
     */
 
     if (
       order.status !==
       "cancelled"
     ) {
-      await releaseReservation(
-        order.inventory_id,
-        order.quantity
+
+      await releaseDoors(
+
+        order.doors,
+
+        order.order_number
+
       );
 
-      await addInventoryTransaction(
-        order.inventory_id,
-        order.quantity,
-        "unreserve",
-        `Deleted Order #${order.order_number}`
+      console.log(
+        "STEP 4 : Inventory Released"
       );
+
     }
 
     /*
-    ---------------------------------------
-    Delete child records
-    ---------------------------------------
+    ----------------------------------------
+    Delete Customizations
+    ----------------------------------------
     */
 
     await admin
@@ -739,6 +866,36 @@ export async function DELETE(
         order.id
       );
 
+    console.log(
+      "STEP 5 : Customizations Deleted"
+    );
+
+    /*
+    ----------------------------------------
+    Delete Payments
+    ----------------------------------------
+    */
+
+    await admin
+      .from(
+        "order_payments"
+      )
+      .delete()
+      .eq(
+        "order_id",
+        order.id
+      );
+
+    console.log(
+      "STEP 6 : Payments Deleted"
+    );
+
+    /*
+    ----------------------------------------
+    Delete Logs
+    ----------------------------------------
+    */
+
     await admin
       .from("order_logs")
       .delete()
@@ -747,13 +904,21 @@ export async function DELETE(
         order.id
       );
 
+    console.log(
+      "STEP 7 : Logs Deleted"
+    );
+
     /*
-    ---------------------------------------
+    ----------------------------------------
     Delete Order
-    ---------------------------------------
+    ----------------------------------------
     */
 
-    const { error } =
+    const {
+
+      error,
+
+    } =
       await admin
         .from("orders")
         .delete()
@@ -763,22 +928,46 @@ export async function DELETE(
         );
 
     if (error) {
-      return NextResponse.json(
-        {
-          message:
-            error.message,
-        },
-        {
-          status: 400,
-        }
+
+      console.error(
+        "Delete Error",
+        error
       );
+
+      throw error;
+
     }
 
+    console.log(
+      "STEP 8 : Order Deleted"
+    );
+
+    console.log(
+      "========== ORDER DELETED =========="
+    );
+
     return NextResponse.json({
+
       success: true,
+
     });
+
   } catch (e) {
-    if (e instanceof Error) {
+
+    console.error(
+      "DELETE ERROR"
+    );
+
+    console.error(e);
+
+    if (
+      e instanceof Error
+    ) {
+
+      console.error(
+        e.stack
+      );
+
       return NextResponse.json(
         {
           message:
@@ -788,6 +977,7 @@ export async function DELETE(
           status: 400,
         }
       );
+
     }
 
     return NextResponse.json(
@@ -799,5 +989,8 @@ export async function DELETE(
         status: 500,
       }
     );
+
   }
+
 }
+
