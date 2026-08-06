@@ -61,6 +61,19 @@ OrderLogs {
 
   }
 
+    static async orderAccepted(
+    orderId: string,
+    userId?: string
+  ) {
+
+    await createOrderLog(
+      orderId,
+      "order_accepted",
+      `Order accepted and ready for production.`,
+      userId
+    );
+
+  }
   /*
   ---------------------------------------
   Inventory Reserved

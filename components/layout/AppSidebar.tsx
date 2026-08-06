@@ -16,6 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { UserNav } from "./UserNav";
+import { LogoutButton } from "../ui/LogOutButton";
 
 interface AppSidebarProps {
   navigation: NavItem[];
@@ -80,7 +81,7 @@ export function AppSidebar({
 
       <SidebarFooter className="border-t">
 
-        <UserNav />
+        <LogoutButton/>
 
       </SidebarFooter>
 

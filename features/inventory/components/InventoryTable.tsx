@@ -62,10 +62,10 @@ export function InventoryTable({
           <TableHead className="text-right">
             Available
           </TableHead>
-
+{/* 
           <TableHead className="text-right">
             Minimum
-          </TableHead>
+          </TableHead> */}
 
           <TableHead className="text-center">
             Status
@@ -107,7 +107,7 @@ export function InventoryTable({
 
 
               <TableCell className="font-medium">
-                {item.height} × {item.width}
+                {item.name}
               </TableCell>
 
               <TableCell className="text-right font-semibold">
@@ -121,10 +121,10 @@ export function InventoryTable({
               <TableCell className="text-right font-semibold">
                 {available}
               </TableCell>
-
+{/* 
               <TableCell className="text-right">
                 {item.minimum_quantity}
-              </TableCell>
+              </TableCell> */}
 
               <TableCell className="text-center">
 
@@ -154,7 +154,7 @@ export function InventoryTable({
 
                 <TableCell className="space-x-2 text-right">
 
-                  {permissions.canUpdate && (
+                  {/* {permissions.canUpdate && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -162,7 +162,7 @@ export function InventoryTable({
                     >
                       Edit
                     </Button>
-                  )}
+                  )} */}
 
                   {permissions.canAdjustStock && (
                     <Button

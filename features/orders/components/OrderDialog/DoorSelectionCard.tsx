@@ -119,13 +119,35 @@ export function DoorSelectionCard({
             }
             onValueChange={(
               value
-            ) =>
+            ) => {
+
+              const inventoryItem =
+                inventory.find(
+                  (item) =>
+                    item.id === value
+                );
+
               onChange({
+
                 ...door,
+
                 inventory_id: value,
-                name: selectedInventory?.name ?? ""
-              })
-            }
+
+                name:
+                  inventoryItem?.name ??
+                  "",
+
+                width:
+                  inventoryItem?.width ??
+                  1,
+
+                height:
+                  inventoryItem?.height ??
+                  1,
+
+              });
+
+            }}
           >
 
             <SelectTrigger>
@@ -330,8 +352,8 @@ export function DoorSelectionCard({
 
               <p>
 
-                Available:
-                {" "}
+                Available:{" "}
+
                 <strong>
 
                   {available}
@@ -342,8 +364,8 @@ export function DoorSelectionCard({
 
               <p>
 
-                Requested:
-                {" "}
+                Requested:{" "}
+
                 <strong>
 
                   {door.quantity}
@@ -354,8 +376,8 @@ export function DoorSelectionCard({
 
               <p>
 
-                Shortage:
-                {" "}
+                Shortage:{" "}
+
                 <strong>
 
                   {shortage}

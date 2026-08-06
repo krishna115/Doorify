@@ -8,3 +8,4 @@ export * from "./components/CustomizationList";
 export * from "./components/ManufacturerChecklist";
 export * from "./components/OrderStatusBadge";
 export * from "./components/OrderTimeline";
+export * from "./services/OrderWorkflowService";

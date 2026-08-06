@@ -20,6 +20,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { UserNav } from "./UserNav";
+import { LogoutButton } from "../ui/LogOutButton";
 
 interface SiteHeaderProps {
   title: string;
@@ -90,22 +91,25 @@ export function SiteHeader({
 
       {/* Right */}
 
-      <div className="flex items-center gap-2">
+      {/* Right */}
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-        >
-          <Bell className="h-5 w-5" />
+<div className="flex items-center gap-2">
 
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-        </Button>
+  {/* <Button
+    variant="ghost"
+    size="icon"
+    className="relative"
+  >
 
-        <UserNav />
+    <Bell className="h-5 w-5" />
 
-      </div>
+    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
 
+  </Button> */}
+
+  {/* <LogoutButton /> */}
+
+</div>
     </header>
   );
 }

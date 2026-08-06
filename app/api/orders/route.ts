@@ -94,9 +94,10 @@ export async function POST(
 
       estimated_days,
 
-      doors,
-      total_amount,
-      amount_paid
+      doors,price_per_sqft,
+  discount,
+  addons,
+  total_amount,
 
     } = body;
 
@@ -210,22 +211,24 @@ export async function POST(
         .from("orders")
         .insert({
 
-          customer_name,
+  customer_name,
+  customer_phone,
 
-          customer_phone,
+  estimated_days,
 
-          estimated_days,
+  doors,
 
-          status:
-            "pending",
+  price_per_sqft,
+  discount,
+  addons,
 
-          doors,
-          total_amount,
+  total_amount,
 
-          created_by:
-            currentUser.id,
+  status: "pending",
 
-        })
+  created_by: currentUser.id,
+
+})
         .select()
         .single();
 
@@ -402,7 +405,10 @@ export async function PUT(
       status,
 
       doors,
-      total_amount
+      price_per_sqft,
+  discount,
+  addons,
+  total_amount,
 
     } = body;
 
@@ -609,7 +615,12 @@ export async function PUT(
           status,
 
           doors,
-          total_amount,
+           price_per_sqft,
+  discount,
+  addons,
+
+  total_amount,
+
 
           assigned_to:
             assignedTo,

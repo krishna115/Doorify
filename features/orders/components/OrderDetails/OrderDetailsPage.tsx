@@ -1,39 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
 
 import {
   OrderDetails,
+  OrderWorkflowService,
 } from "../..";
 
-import { useRouter } from "next/navigation";
+import {
+  OrderDetailsService,
+} from "../../services/OrderDetailsService";
 
-import { OrderHeader } from "./OrderHeader";
+import {
+  OrderHeader,
+} from "./OrderHeader";
 
-import { CustomerCard } from "./CustomerCard";
+import {
+  OrderWorkflowCard,
+} from "./OrderWorkflowCard";
 
-import { DoorDetailsCard } from "./DoorDetailsCard";
+import {
+  CustomerCard,
+} from "./CustomerCard";
 
-import { CustomizationCard } from "./CustomizationCard";
+import {
+  DoorDetailsCard,
+} from "./DoorDetailsCard";
 
-import { OrderTimeline } from "./OrderTimeline";
-import { OrderDetailsService } from "../../services/OrderDetailsService";
+import {
+  CustomizationCard,
+} from "./CustomizationCard";
+
+import {
+  OrderTimeline,
+} from "./OrderTimeline";
 
 interface Props {
+
   orderId: string;
+
 }
 
 export function OrderDetailsPage({
+
   orderId,
+
 }: Props) {
 
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const [details, setDetails] =
-    useState<OrderDetails | null>(null);
+  const [
+    details,
+    setDetails,
+  ] =
+    useState<OrderDetails | null>(
+      null
+    );
+
+  const [
+    estimatedDays,
+    setEstimatedDays,
+  ] = useState(0);
 
   async function loadOrder() {
 
@@ -48,17 +88,28 @@ export function OrderDetailsPage({
 
       setDetails(response);
 
+      setEstimatedDays(
+        response.order.estimated_days ??
+          0
+      );
+
     } catch (e) {
 
-      if (e instanceof Error) {
+      if (
+        e instanceof Error
+      ) {
 
-        alert(e.message);
+        alert(
+          e.message
+        );
 
       }
 
     } finally {
 
-      setLoading(false);
+      setLoading(
+        false
+      );
 
     }
 
@@ -109,30 +160,84 @@ export function OrderDetailsPage({
         }
       />
 
+      {/* -------------------------------- */}
+      {/* Workflow */}
+      {/* -------------------------------- */}
+
+      <OrderWorkflowCard
+        order={
+          details.order
+        }
+        estimatedDays={
+          estimatedDays
+        }
+        onEstimatedDaysChange={
+          setEstimatedDays
+        }
+        onAction={async () => {
+
+          console.log(
+            "Workflow Button Clicked"
+          );
+
+          console.log(
+            "Current Status:",
+            details.order.status
+          );
+
+          console.log(
+            "Estimated Days:",
+            estimatedDays
+          );
+
+         await OrderWorkflowService.nextStep(details.order,estimatedDays);
+
+            await loadOrder();
+        }}
+      />
+
       <div className="grid gap-6 lg:grid-cols-2">
 
         <CustomerCard
-          order={details.order}
+          order={
+            details.order
+          }
         />
 
         <DoorDetailsCard
-          order={details.order}
+          order={
+            details.order
+          }
         />
 
       </div>
 
       <CustomizationCard
-    customizations={details.customizations}
-    editable={true}
-    onRefresh={loadOrder}
-/>
+        customizations={
+          details.customizations
+        }
+        editable={true}
+        onRefresh={
+          loadOrder
+        }
+      />
 
-     <OrderTimeline
-  logs={details.logs.map((log) => ({
-    ...log,
-    description: log.description ?? "",
-  }))}
-/>
+      <OrderTimeline
+        logs={details.logs.map(
+          (
+            log
+          ) => ({
+
+            ...log,
+
+            description:
+              log.description ??
+              "",
+
+          })
+        )}
+      />
+
     </div>
 
   );

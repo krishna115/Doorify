@@ -39,6 +39,10 @@ import { CustomizationSection } from "./CustomizationSection";
 import { OrderCustomizationService } from "../../services/OrderCustomizationService";
 import { PaymentSection } from "./PaymentSection";
 import { PaymentService } from "../../services/PaymentService";
+import { InvoiceData, InvoicePreviewDialog, InvoiceService, ShareInvoiceDialog } from "@/features/invoice";
+import { OrderDetailsService } from "../../services/OrderDetailsService";
+
+
 
 interface Props {
   open: boolean;
@@ -48,8 +52,14 @@ interface Props {
   ) => void;
 
   order?: Order | null;
+  onCreated?: (
+    orderId: string,
+    invoice: InvoiceData
+  ) => void;
+  
 
   onSuccess?: () => void;
+  
 }
 
 export function OrderDialog({
@@ -57,7 +67,32 @@ export function OrderDialog({
   onOpenChange,
   order,
   onSuccess,
+  onCreated
 }: Props) {
+
+    const [
+
+  invoice,
+
+  setInvoice,
+
+] = useState<InvoiceData | null>(null);
+
+const [
+
+  previewOpen,
+
+  setPreviewOpen,
+
+] = useState(false);
+
+const [
+
+  shareOpen,
+
+  setShareOpen,
+
+] = useState(false);
 
   const isEdit = !!order;
 
@@ -75,6 +110,20 @@ export function OrderDialog({
     const [totalAmount,setTotalAmount,] = useState(0);
 
     const [amountPaid,setAmountPaid,] = useState(0);
+
+    const [pricePerSqft, setPricePerSqft] =
+  useState(0);
+
+const [discount, setDiscount] =
+  useState(0);
+
+const [addons, setAddons] =
+  useState<
+    {
+      name: string;
+      amount: number;
+    }[]
+  >([]);
 
   const [
     customerName,
@@ -98,6 +147,7 @@ export function OrderDialog({
       | "manufacturing"
       | "completed"
       | "cancelled"
+      | "ready_for_dispatch"
     >("pending");
 
   const [
@@ -107,6 +157,9 @@ export function OrderDialog({
     {
       inventory_id: "",
       quantity: 1,
+      width: 1,
+      height: 1,
+      name: ""
     },
   ]);
 
@@ -132,6 +185,9 @@ export function OrderDialog({
       {
         inventory_id: "",
         quantity: 1,
+        width: 1,
+        height: 1,
+        name: ""
       },
     ]);
 
@@ -206,6 +262,9 @@ export function OrderDialog({
             {
               inventory_id: "",
               quantity: 1,
+              name: "",
+              width: 1,
+              height: 1
             },
           ]
     );
@@ -242,6 +301,9 @@ export function OrderDialog({
       {
         inventory_id: "",
         quantity: 1,
+        width: 1,
+        height: 1,
+        name: ""
       },
     ]);
 
@@ -399,8 +461,13 @@ export function OrderDialog({
           estimatedDays,
 
         doors,
-        total_amount: totalAmount,
          amount_paid: amountPaid,
+
+         price_per_sqft: pricePerSqft,
+  discount,
+  addons,
+
+  total_amount: totalAmount,
 
       };
 
@@ -428,7 +495,6 @@ export function OrderDialog({
         : "Advance Payment",
 
   });
-
 }
 
       await OrderCustomizationService.save(
@@ -436,7 +502,18 @@ export function OrderDialog({
         customizations
       );
 
-      
+ const details =
+  await OrderDetailsService.getById(
+    createdOrder.id
+  );
+
+const invoice =
+  InvoiceService.build(details);
+
+      onCreated?.(
+        createdOrder.id,
+        invoice
+      );
 
     }
 
@@ -467,127 +544,185 @@ export function OrderDialog({
 }
 return (
 
-  <Dialog
-    open={open}
-    onOpenChange={onOpenChange}
-  >
+  <>
 
-    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
 
-      <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
 
-        <DialogTitle>
+        <DialogHeader>
 
-          {isEdit
-            ? "Edit Order"
-            : "Create Order"}
+          <DialogTitle>
 
-        </DialogTitle>
+            {isEdit
+              ? "Edit Order"
+              : "Create Order"}
 
-      </DialogHeader>
+          </DialogTitle>
 
-      <div className="space-y-6">
+        </DialogHeader>
 
-        <CustomerSection
-          customerName={customerName}
-          customerPhone={customerPhone}
-          onCustomerNameChange={setCustomerName}
-          onCustomerPhoneChange={setCustomerPhone}
-        />
+        <div className="space-y-6">
 
-        <DoorSelectionList
-          inventory={inventory}
-          inventoryLoading={inventoryLoading}
-          doors={doors}
-          onDoorsChange={setDoors}
-          onAddDoor={addDoor}
-          onRemoveDoor={removeDoor}
-          onUpdateDoor={updateDoor}
-        />
-
-        {/* <OrderDetailsSection
-          estimatedDays={estimatedDays}
-          quantity={
-            doors.reduce(
-              (total, door) =>
-                total + door.quantity,
-              0
-            )
-          }
-          onEstimatedDaysChange={
-            setEstimatedDays
-          }
-        /> */}
-
-        {isEdit && (
-
-          <OrderStatusSection
-            status={status}
-            onStatusChange={setStatus}
+          <CustomerSection
+            customerName={customerName}
+            customerPhone={customerPhone}
+            onCustomerNameChange={setCustomerName}
+            onCustomerPhoneChange={setCustomerPhone}
           />
 
-        )}
-
-        {!isEdit && (
-
-          <CustomizationSection
-            value={customizations}
-            onChange={setCustomizations}
+          <DoorSelectionList
+            inventory={inventory}
+            inventoryLoading={inventoryLoading}
+            doors={doors}
+            onDoorsChange={setDoors}
+            onAddDoor={addDoor}
+            onRemoveDoor={removeDoor}
+            onUpdateDoor={updateDoor}
           />
 
-        )}
+          {isEdit && (
 
-        <PaymentSection
+            <OrderStatusSection
+              status={status}
+              onStatusChange={setStatus}
+            />
 
-  totalAmount={totalAmount}
+          )}
 
-  amountPaid={amountPaid}
+          {!isEdit && (
 
-  onTotalAmountChange={setTotalAmount}
+            <CustomizationSection
+              value={customizations}
+              onChange={setCustomizations}
+            />
 
-  onAmountPaidChange={setAmountPaid}
+          )}
 
-/>
+          <PaymentSection
+            doors={doors}
+            totalAmount={totalAmount}
+            amountPaid={amountPaid}
+            pricePerSqft={pricePerSqft}
+            discount={discount}
+            addons={addons}
+            onTotalAmountChange={setTotalAmount}
+            onAmountPaidChange={setAmountPaid}
+            onPricePerSqftChange={setPricePerSqft}
+            onDiscountChange={setDiscount}
+            onAddonsChange={setAddons}
+          />
 
-      </div>
+        </div>
 
-      <DialogFooter>
+        <DialogFooter>
 
-        <Button
-          variant="outline"
-          onClick={() => {
+          <Button
+            variant="outline"
+            onClick={() => {
 
-            resetForm();
+              resetForm();
 
-            onOpenChange(false);
+              onOpenChange(false);
 
-          }}
-        >
-          Cancel
-        </Button>
+            }}
+          >
 
-        <Button
-          disabled={
-            loading ||
-            doors.length === 0
-          }
-          onClick={handleSave}
-        >
+            Cancel
 
-          {loading
-            ? "Saving..."
-            : isEdit
-            ? "Update Order"
-            : "Create Order"}
+          </Button>
 
-        </Button>
+          <Button
+            disabled={
+              loading ||
+              doors.length === 0
+            }
+            onClick={handleSave}
+          >
 
-      </DialogFooter>
+            {loading
+              ? "Saving..."
+              : isEdit
+              ? "Update Order"
+              : "Create Order"}
 
-    </DialogContent>
+          </Button>
 
-  </Dialog>
+        </DialogFooter>
+
+      </DialogContent>
+
+    </Dialog>
+
+    {/* ---------------------------------------
+        Invoice Preview
+    --------------------------------------- */}
+
+    {/* {invoice && (
+
+      <InvoicePreviewDialog
+
+        open={previewOpen}
+
+        invoice={invoice}
+
+        onOpenChange={setPreviewOpen}
+
+        onShare={() => {
+
+          setPreviewOpen(false);
+
+          setShareOpen(true);
+
+        }}
+
+      />
+
+    )} */}
+
+    {/* ---------------------------------------
+        Share Invoice
+    --------------------------------------- */}
+
+    {/* {invoice && (
+
+      <ShareInvoiceDialog
+
+        open={shareOpen}
+
+        invoice={invoice}
+
+        onOpenChange={setShareOpen}
+
+        onPrint={() => {
+
+          console.log("Print Invoice");
+
+        }}
+
+        onDownload={() => {
+
+          console.log("Download PDF");
+
+        }}
+
+        onWhatsapp={() => {
+
+          console.log("Share on WhatsApp");
+
+        }}
+
+      />
+
+    )} */}
+
+
+
+
+  </>
 
 );
-
 }

@@ -61,10 +61,10 @@ export default function InventoryPage() {
             Manage board dimensions and stock.
           </p>
         </div>
-
+{/* 
         <Button>
           Add Dimension
-        </Button>
+        </Button> */}
 
       </div>
 

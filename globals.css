@@ -1,0 +1,15 @@
+@media print {
+
+  body {
+
+    background: white !important;
+
+  }
+
+  button {
+
+    display: none !important;
+
+  }
+
+}

@@ -3,85 +3,269 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
+
 import { AuthService } from "@/features/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router =
+    useRouter();
 
-  const [loading, setLoading] = useState(false);
+  const [
+    email,
+    setEmail,
+  ] = useState("");
 
- const handleSignIn = async () => {
-  try {
-    setLoading(true);
+  const [
+    password,
+    setPassword,
+  ] = useState("");
 
-    const { profile } =
-      await AuthService.login(
-        email,
-        password
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
+
+  const handleSignIn =
+    async () => {
+
+      console.clear();
+
+      console.log(
+        "========== LOGIN =========="
       );
 
-    router.replace(
-      AuthService.getDashboard(profile.role)
-    );
+      console.log(
+        "Email:",
+        email
+      );
 
-    router.refresh();
-  } catch (error) {
-    if (error instanceof Error) {
-      alert(error.message);
-    } else {
-      alert("Something went wrong.");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+      try {
+
+        setLoading(true);
+
+        console.log(
+          "STEP 1 : Calling AuthService.login()"
+        );
+
+        const result =
+          await AuthService.login(
+            email,
+            password
+          );
+
+        console.log(
+          "STEP 2 : Login Success"
+        );
+
+        console.log(
+          "Profile:",
+          result.profile
+        );
+
+        const dashboard =
+          AuthService.getDashboard(
+            result.profile.role
+          );
+
+        console.log(
+          "STEP 3 : Dashboard",
+          dashboard
+        );
+
+        console.log(
+          "STEP 4 : Redirecting..."
+        );
+
+        router.replace(
+          dashboard
+        );
+
+        console.log(
+          "STEP 5 : Refreshing Router..."
+        );
+
+        router.refresh();
+
+        console.log(
+          "========== LOGIN COMPLETE =========="
+        );
+
+      } catch (error) {
+
+        console.error(
+          "========== LOGIN FAILED =========="
+        );
+
+        console.error(
+          error
+        );
+
+        if (
+          error instanceof Error
+        ) {
+
+          console.error(
+            error.stack
+          );
+
+          alert(
+            error.message
+          );
+
+        } else {
+
+          alert(
+            "Something went wrong."
+          );
+
+        }
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    };
 
   return (
+
     <main className="flex min-h-screen items-center justify-center bg-muted/20">
+
       <div className="w-full max-w-md rounded-xl border bg-card p-8 shadow-sm">
 
         <div className="mb-8 text-center">
+
           <h1 className="text-3xl font-bold">
+
             Doorify
+
           </h1>
 
           <p className="mt-2 text-sm text-muted-foreground">
+
             Sign in to continue
+
           </p>
+
         </div>
 
         <div className="space-y-4">
 
+          {/* -----------------------------
+              Email
+          ----------------------------- */}
+
           <input
             type="email"
             placeholder="Email"
+            disabled={loading}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) =>
+              setEmail(
+                e.target.value
+              )
+            }
             className="w-full rounded-md border px-4 py-3"
           />
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border px-4 py-3"
-          />
+          {/* -----------------------------
+              Password
+          ----------------------------- */}
+
+          <div className="relative">
+
+            <input
+              type={
+                showPassword
+                  ? "text"
+                  : "password"
+              }
+              placeholder="Password"
+              disabled={loading}
+              value={password}
+              onChange={(e) =>
+                setPassword(
+                  e.target.value
+                )
+              }
+              className="w-full rounded-md border px-4 py-3 pr-12"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowPassword(
+                  (prev) =>
+                    !prev
+                )
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+
+              {showPassword ? (
+
+                <EyeOff className="h-5 w-5" />
+
+              ) : (
+
+                <Eye className="h-5 w-5" />
+
+              )}
+
+            </button>
+
+          </div>
+
+          {/* -----------------------------
+              Login Button
+          ----------------------------- */}
 
           <button
-            onClick={handleSignIn}
-            disabled={loading}
-            className="w-full rounded-md bg-primary py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+            onClick={
+              handleSignIn
+            }
+            disabled={
+              loading
+            }
+            className="flex w-full items-center justify-center rounded-md bg-primary py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Signing In..." : "Sign In"}
+
+            {loading ? (
+
+              <>
+
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+
+                Logging In...
+
+              </>
+
+            ) : (
+
+              "Sign In"
+
+            )}
+
           </button>
 
         </div>
 
       </div>
+
     </main>
+
   );
+
 }

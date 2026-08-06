@@ -3,13 +3,16 @@ export type OrderStatus =
   | "accepted"
   | "manufacturing"
   | "completed"
+  | "ready_for_dispatch"
   | "cancelled";
 
 export interface OrderDoor {
   inventory_id: string | null;
 
   quantity: number;
-  name?: string 
+  name?: string;
+  width: number;
+  height: number;
 }
 
 export interface Order {
@@ -29,6 +32,15 @@ export interface Order {
 
   created_at: string;
   total_amount: number;
+
+  price_per_sqft: number;
+
+discount: number;
+
+addons: {
+  name: string;
+  amount: number;
+}[];
 }
 // export interface OrderCustomization {
 //   id: string;
@@ -69,6 +81,14 @@ export interface CreateOrderRequest {
   doors: OrderDoor[];
   total_amount: number;
   amount_paid: number;
+  price_per_sqft: number;
+
+discount: number;
+
+addons: {
+  name: string;
+  amount: number;
+}[];
 
 }
 

@@ -16,7 +16,8 @@ interface Props {
     | "accepted"
     | "manufacturing"
     | "completed"
-    | "cancelled";
+    | "cancelled"
+    | "ready_for_dispatch";
 
   onStatusChange: (
     value:
@@ -25,6 +26,7 @@ interface Props {
       | "manufacturing"
       | "completed"
       | "cancelled"
+      | "ready_for_dispatch"
   ) => void;
 }
 

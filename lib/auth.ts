@@ -85,14 +85,60 @@ export async function requireRole(
   role: UserRole
 ) {
 
-  const user =
-    await requireAuth();
+  console.log(
+    "========== REQUIRE ROLE =========="
+  );
+
+  console.log(
+    "Required Role:",
+    role
+  );
+
+  const user = await requireAuth();
+
+  console.log(
+    "Authenticated User:",
+    user
+  );
+
+  console.log(
+    "User Role:",
+    user.role
+  );
 
   if (
     user.role !== role
   ) {
+
+    console.log(
+      "❌ Role Mismatch"
+    );
+
+    console.log(
+      "Expected:",
+      role
+    );
+
+    console.log(
+      "Received:",
+      user.role
+    );
+
+    console.log(
+      "Redirecting to /"
+    );
+
     redirect("/");
+
   }
+
+  console.log(
+    "✅ Role Authorized"
+  );
+
+  console.log(
+    "==============================="
+  );
 
   return user;
 
