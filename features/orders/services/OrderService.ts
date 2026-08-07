@@ -6,20 +6,113 @@ import {
   OrderLog,
 } from "../types";
 
+export interface OrderFilters {
+  createdBy?: string;
+  manufacturerId?: string;
+  status?: string;
+}
+
 export class OrderService {
 
-  static async getAll(): Promise<Order[]> {
+static async getAll(
+  filters?: OrderFilters
+): Promise<Order[]> {
 
-    const response = await fetch("/api/orders");
+  const params =
+    new URLSearchParams();
 
-    if (!response.ok) {
-      throw new Error(await response.text());
-    }
+  /*
+  -----------------------------------------
+  Created By
+  -----------------------------------------
+  */
 
-    return response.json();
+  if (filters?.createdBy) {
+
+    params.set(
+      "createdBy",
+      filters.createdBy
+    );
 
   }
 
+  /*
+  -----------------------------------------
+  Accepted By
+  -----------------------------------------
+  */
+
+  if (filters?.manufacturerId) {
+
+    params.set(
+      "acceptedBy",
+      filters.manufacturerId
+    );
+
+  }
+
+  /*
+  -----------------------------------------
+  Single Status
+  -----------------------------------------
+  */
+
+  if (filters?.status) {
+
+    params.set(
+      "status",
+      filters.status
+    );
+
+  }
+
+  /*
+  -----------------------------------------
+  Multiple Statuses
+  -----------------------------------------
+  */
+
+ 
+
+  /*
+  -----------------------------------------
+  Request
+  -----------------------------------------
+  */
+
+  const query =
+    params.toString();
+
+  const response =
+    await fetch(
+      query
+        ? `/api/orders?${query}`
+        : "/api/orders"
+    );
+
+  /*
+  -----------------------------------------
+  Error
+  -----------------------------------------
+  */
+
+  if (!response.ok) {
+
+    throw new Error(
+      await response.text()
+    );
+
+  }
+
+  /*
+  -----------------------------------------
+  Result
+  -----------------------------------------
+  */
+
+  return response.json();
+
+}
   static async getById(
     id: string
   ): Promise<Order> {

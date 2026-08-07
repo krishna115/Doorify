@@ -26,7 +26,8 @@ export class InvoiceService {
 
   static build(
 
-    details: OrderDetails
+    details: OrderDetails,
+    amount_paid: number
 
   ): InvoiceData {
 
@@ -193,19 +194,11 @@ export class InvoiceService {
           details.order.total_amount
         ),
 
-      advance: 0,
-        // Number(
-        //   details.order.advance_amount ?? 0
-        // ),
+      advance: amount_paid,
 
       remaining:
 
-        Number(
-          details.order.total_amount
-        )
-        //  -
-
-        // Number(details.order.advance_amount ?? 0)
+        Number(details.order.total_amount) - amount_paid
         
 
     };

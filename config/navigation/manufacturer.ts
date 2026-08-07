@@ -14,27 +14,27 @@ export const manufacturerNavigation = [
     href: "/manufacturer"
   },
   {
-    title: "Orders",
+    title: "My Orders",
     href: "/manufacturer/orders"
   },
   {
-    title: "Pending Orders",
-    href: "/manufacturer/pending-orders"
+    title: "All Orders",
+    href: "/manufacturer/orders/pending"
   },
-  {
-    title: "In Progress",
-    href: "/manufacturer/in-progress-orders",
-  },
-  {
-    title: "Completed",
-    href: "/manufacturer/completed-orders",
-  },
+  // {
+  //   title: "In Progress",
+  //   href: "/manufacturer/in-progress-orders",
+  // },
+  // {
+  //   title: "Completed",
+  //   href: "/manufacturer/completed-orders",
+  // },
   {
     title: "Inventory",
     href: "/manufacturer/inventory",
   },
-  {
-    title: "Profile",
-    href: "/manufacturer/profile",
-  },
+  // {
+  //   title: "Profile",
+  //   href: "/manufacturer/profile",
+  // },
 ];

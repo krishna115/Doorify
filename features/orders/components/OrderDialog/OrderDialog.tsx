@@ -507,8 +507,12 @@ const [addons, setAddons] =
     createdOrder.id
   );
 
+  
+
+  
+
 const invoice =
-  InvoiceService.build(details);
+  InvoiceService.build(details, amountPaid);
 
       onCreated?.(
         createdOrder.id,

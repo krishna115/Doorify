@@ -1,156 +1,113 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import {
-  Order,
-  OrderDialog,
-  OrderService,
-  OrdersTable,
-} from "@/features/orders";
+  useEffect,
+  useState,
+} from "react";
 
-import { Button } from "@/components/ui/button";
+import OrdersPage2 from "@/features/orders/components/OrdersPage2";
 
-export default function PendingOrdersPage() {
+import { AuthService } from "@/features/auth";
 
-  const [orders, setOrders] =
-    useState<Order[]>([]);
+export default function Page() {
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    userId,
+    setUserId,
+  ] = useState<string | null>(null);
 
-  const [selectedOrder, setSelectedOrder] =
-    useState<Order | null>(null);
-
-  const [dialogOpen, setDialogOpen] =
-    useState(false);
-
-  async function loadOrders() {
-
-    try {
-
-      setLoading(true);
-
-      const data =
-        await OrderService.getAll();
-
-      setOrders(
-        data
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  }
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
   useEffect(() => {
-    loadOrders();
-  }, []);
 
-  function handleEdit(
-    order: Order
-  ) {
+    async function loadUser() {
 
-    setSelectedOrder(order);
+      try {
 
-    setDialogOpen(true);
+        const {
+          session,
+        } =
+          await AuthService.getSession();
 
-  }
+        if (!session?.user?.id) {
 
-    const [status, setStatus] =
-    useState<
-      | "pending"
-      | "accepted"
-      | "manufacturing"
-      | "completed"
-      | "cancelled"
-    >("pending");
+          throw new Error(
+            "Unable to identify the current user."
+          );
 
+        }
 
-  async function handleAccept(
-    order: Order
-  ) {
+        setUserId(
+          session.user.id
+        );
 
-    const confirmed =
-      confirm(
-        `Accept Order #${order.order_number}?`
-      );
+      } catch (error) {
 
-    if (!confirmed) return;
+        console.error(
+          "Unable to load current user:",
+          error
+        );
 
-    try {
-      order.status = "accepted";
+      } finally {
 
-      await OrderService.update(order);
+        setLoading(false);
 
-      await loadOrders();
-
-    } catch (e) {
-
-      if (e instanceof Error) {
-        alert(e.message);
       }
 
     }
 
-  }
+    loadUser();
+
+  }, []);
 
   if (loading) {
 
     return (
-      <div className="p-6">
-        Loading pending orders...
+
+      <div className="flex h-40 items-center justify-center">
+
+        Loading orders...
+
       </div>
+
+    );
+
+  }
+
+  if (!userId) {
+
+    return (
+
+      <div className="flex h-40 items-center justify-center text-muted-foreground">
+
+        Unable to load your account.
+
+      </div>
+
     );
 
   }
 
   return (
 
-    <div className="space-y-6 p-6">
+    <OrdersPage2
 
-      <div>
+      basePath="/manufacturer/orders"
 
-        <h1 className="text-3xl font-bold">
-          Pending Orders
-        </h1>
+      permissions={{
+        canCreate: false,
+        canEdit: false,
+        canDelete: false,
+      }}
 
-        <p className="text-muted-foreground">
-          Orders waiting for manufacturing approval.
-        </p>
+      filters={{
+        acceptedBy: userId,
+      }}
 
-      </div>
-
-     <OrdersTable
-  orders={orders}
-  basePath="/manufacturer/orders"
-  permissions={{
-    canAccept: true,
-  }}
-  onAccept={handleAccept}
-/>
-      <OrderDialog
-        open={dialogOpen}
-        order={selectedOrder}
-        onOpenChange={(open) => {
-
-          setDialogOpen(open);
-
-          if (!open) {
-
-            setSelectedOrder(null);
-
-            loadOrders();
-
-          }
-
-        }}
-      />
-
-    </div>
+    />
 
   );
 

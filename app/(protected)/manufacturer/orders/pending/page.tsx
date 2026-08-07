@@ -8,7 +8,7 @@ export default function Page() {
 
     <OrdersPage2
 
-      basePath="/manufacturer/all-orders"
+      basePath="/manufacturer/orders/pending"
 
       permissions={{
         canCreate: false,

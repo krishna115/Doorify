@@ -26,7 +26,13 @@ export async function GET() {
     const { data, error } =
       await admin
         .from("orders")
-        .select("*")
+        .select(`
+          *,
+          created_by_profile:profiles!orders_created_by_fkey (
+            id,
+            name
+          )
+        `)
         .order(
           "created_at",
           {
@@ -34,19 +40,23 @@ export async function GET() {
           }
         );
 
+
     if (error) {
 
       throw error;
 
     }
 
+
     return NextResponse.json(
       data
     );
 
+
   } catch (e) {
 
     console.error(e);
+
 
     return NextResponse.json(
       {
@@ -61,7 +71,6 @@ export async function GET() {
   }
 
 }
-
 export async function POST(
   request: NextRequest
 ) {

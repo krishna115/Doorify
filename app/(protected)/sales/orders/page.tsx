@@ -2,118 +2,114 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  Order,
-  OrderDialog,
-  OrdersTable,
-  OrderService,
-} from "@/features/orders";
-
-import { Button } from "@/components/ui/button";
+import OrdersPage2 from "@/features/orders/components/OrdersPage2";
+import { AuthService } from "@/features/auth";
 
 export default function SalesPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
 
-  const [loading, setLoading] = useState(true);
+  const [
+    userId,
+    setUserId,
+  ] = useState<string | null>(null);
 
-  const [dialogOpen, setDialogOpen] =
-    useState(false);
-
-  const [selectedOrder, setSelectedOrder] =
-    useState<Order | null>(null);
-
-  async function loadOrders() {
-    try {
-      setLoading(true);
-
-      const data =
-        await OrderService.getAll();
-
-      setOrders(data);
-    } catch (e) {
-      console.error(e);
-      alert("Unable to load orders.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
   useEffect(() => {
-    loadOrders();
+
+    async function loadUser() {
+
+      try {
+
+        const {
+          session,
+        } = await AuthService.getSession();
+
+        if (!session?.user?.id) {
+
+          throw new Error(
+            "Unable to identify the current user."
+          );
+
+        }
+
+        setUserId(
+          session.user.id
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Unable to load current user:",
+          error
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    }
+
+    loadUser();
+
   }, []);
 
-  function handleCreate() {
-    setSelectedOrder(null);
-    setDialogOpen(true);
-  }
+  if (loading) {
 
-  function handleEdit(order: Order) {
-    setSelectedOrder(order);
-    setDialogOpen(true);
-  }
+    return (
 
-  async function handleDelete(order: Order) {
-  const confirmed = window.confirm(
-    "Are you sure you want to delete this order?"
-  );
+      <div className="flex h-40 items-center justify-center">
 
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    await OrderService.delete(order.id);
-
-    await loadOrders();
-  } catch (e) {
-    if (e instanceof Error) {
-      alert(e.message);
-    }
-  }
-}
-
-  return (
-    <div className="space-y-6">
-
-      <div className="flex items-center justify-between">
-
-        <div>
-
-          <h1 className="text-3xl font-bold">
-            Orders
-          </h1>
-
-          <p className="text-muted-foreground">
-            Create and manage customer
-            orders.
-          </p>
-
-        </div>
-
-        <Button onClick={handleCreate}>
-          New Order
-        </Button>
+        Loading orders...
 
       </div>
 
-      {loading ? (
-  <div className="flex h-40 items-center justify-center">
-    Loading orders...
-  </div>
-) : (
-  <OrdersTable
-  orders={orders}
-  basePath="/sales/orders"
-  permissions={{}}
-/>
-)}
-      <OrderDialog
-        open={dialogOpen}
-        order={selectedOrder}
-        onOpenChange={setDialogOpen}
-        onSuccess={loadOrders}
-      />
+    );
 
-    </div>
+  }
+
+  if (!userId) {
+
+    return (
+
+      <div className="flex h-40 items-center justify-center text-muted-foreground">
+
+        Unable to load your account.
+
+      </div>
+
+    );
+
+  }
+
+  return (
+
+    <OrdersPage2
+
+      basePath="/sales/orders"
+
+      permissions={{
+
+        canCreate: true,
+
+        canEdit: true,
+
+        canDelete: true,
+
+      }}
+
+      filters={{
+
+        createdBy: userId,
+
+      }}
+
+    />
+
   );
+
 }

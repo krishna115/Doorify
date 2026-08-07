@@ -14,7 +14,6 @@ export interface OrderDoor {
   width: number;
   height: number;
 }
-
 export interface Order {
   id: string;
 
@@ -30,17 +29,50 @@ export interface Order {
 
   doors: OrderDoor[];
 
+  /*
+  -----------------------------------------
+  Users
+  -----------------------------------------
+  */
+
+  created_by: string | null;
+
+  accepted_by: string | null;
+
+  creator?: {
+    id: string;
+    name: string;
+  } | null;
+
+  accepted_by_user?: {
+    id: string;
+    name: string;
+  } | null;
+
+  /*
+  -----------------------------------------
+  Dates
+  -----------------------------------------
+  */
+
   created_at: string;
+
+  /*
+  -----------------------------------------
+  Pricing
+  -----------------------------------------
+  */
+
   total_amount: number;
 
   price_per_sqft: number;
 
-discount: number;
+  discount: number;
 
-addons: {
-  name: string;
-  amount: number;
-}[];
+  addons: {
+    name: string;
+    amount: number;
+  }[];
 }
 // export interface OrderCustomization {
 //   id: string;

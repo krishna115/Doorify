@@ -28,86 +28,214 @@ export function UsersTable({
   onEdit,
   onDelete,
 }: Props) {
+
   return (
-    <Table>
 
-      <TableHeader>
+    <>
 
-        <TableRow>
+      {/* =====================================================
+          DESKTOP TABLE
+      ====================================================== */}
 
-          <TableHead>Name</TableHead>
+      <div className="hidden md:block">
 
-          <TableHead>Email</TableHead>
+        <Table>
 
-          <TableHead>Role</TableHead>
+          <TableHeader>
 
-          <TableHead className="text-right">
-            Actions
-          </TableHead>
+            <TableRow>
 
-        </TableRow>
+              <TableHead>
+                Name
+              </TableHead>
 
-      </TableHeader>
+              <TableHead>
+                Email
+              </TableHead>
 
-      <TableBody>
+              <TableHead>
+                Role
+              </TableHead>
+
+              <TableHead className="text-right">
+                Actions
+              </TableHead>
+
+            </TableRow>
+
+          </TableHeader>
+
+          <TableBody>
+
+            {users.length === 0 && (
+
+              <TableRow>
+
+                <TableCell
+                  colSpan={4}
+                  className="py-10 text-center text-muted-foreground"
+                >
+                  No users found.
+                </TableCell>
+
+              </TableRow>
+
+            )}
+
+            {users.map((user) => (
+
+              <TableRow key={user.id}>
+
+                <TableCell className="font-medium">
+                  {user.name}
+                </TableCell>
+
+                <TableCell>
+                  {user.email}
+                </TableCell>
+
+                <TableCell>
+
+                  <Badge variant="secondary">
+                    {user.role}
+                  </Badge>
+
+                </TableCell>
+
+                <TableCell className="space-x-2 text-right">
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      onEdit(user)
+                    }
+                  >
+                    Edit
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() =>
+                      onDelete(user)
+                    }
+                  >
+                    Delete
+                  </Button>
+
+                </TableCell>
+
+              </TableRow>
+
+            ))}
+
+          </TableBody>
+
+        </Table>
+
+      </div>
+
+
+      {/* =====================================================
+          MOBILE CARDS
+      ====================================================== */}
+
+      <div className="space-y-3 md:hidden">
 
         {users.length === 0 && (
-          <TableRow>
-            <TableCell
-              colSpan={4}
-              className="text-center py-10 text-muted-foreground"
-            >
-              No users found.
-            </TableCell>
-          </TableRow>
+
+          <div className="rounded-lg border py-10 text-center text-sm text-muted-foreground">
+
+            No users found.
+
+          </div>
+
         )}
 
         {users.map((user) => (
 
-          <TableRow key={user.id}>
+          <div
+            key={user.id}
+            className="rounded-xl border bg-background p-4"
+          >
 
-            <TableCell className="font-medium">
-              {user.name}
-            </TableCell>
+            {/* ---------------------------------------------
+                User Information
+            ---------------------------------------------- */}
 
-            <TableCell>
-              {user.email}
-            </TableCell>
+            <div className="flex items-start justify-between gap-3">
 
-            <TableCell>
+              <div className="min-w-0">
 
-              <Badge variant="secondary">
+                <p className="truncate font-semibold">
+
+                  {user.name}
+
+                </p>
+
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+
+                  {user.email}
+
+                </p>
+
+              </div>
+
+              <Badge
+                variant="secondary"
+                className="shrink-0 text-[10px] capitalize"
+              >
+
                 {user.role}
+
               </Badge>
 
-            </TableCell>
+            </div>
 
-            <TableCell className="text-right space-x-2">
+
+            {/* ---------------------------------------------
+                Actions
+            ---------------------------------------------- */}
+
+            <div className="mt-4 flex gap-2">
 
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => onEdit(user)}
+                className="h-9 flex-1"
+                onClick={() =>
+                  onEdit(user)
+                }
               >
+
                 Edit
+
               </Button>
 
               <Button
                 size="sm"
                 variant="destructive"
-                onClick={() => onDelete(user)}
+                className="h-9 flex-1"
+                onClick={() =>
+                  onDelete(user)
+                }
               >
+
                 Delete
+
               </Button>
 
-            </TableCell>
+            </div>
 
-          </TableRow>
+          </div>
 
         ))}
 
-      </TableBody>
+      </div>
 
-    </Table>
+    </>
+
   );
+
 }

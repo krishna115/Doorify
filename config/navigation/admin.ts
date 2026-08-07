@@ -7,6 +7,11 @@ export const adminNavigation = [
     title: "Orders",
     href: "/admin/orders",
   },
+  
+  {
+    title: "Orders By Salesperson",
+    href: "/admin/orders/salesperson",
+  },
   {
     title: "Inventory",
     href: "/admin/inventory",

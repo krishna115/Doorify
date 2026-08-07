@@ -79,4 +79,24 @@ export class AuthService {
         return "/login";
     }
   }
+
+ static async getSession() {
+
+  const {
+    data,
+    error,
+  } =
+    await this.supabase.auth.getSession();
+
+  if (error) {
+
+    throw new Error(
+      error.message
+    );
+
+  }
+
+  return data;
+
+}
 }

@@ -248,7 +248,7 @@ export function InvoicePdfCustomerSection({
 
               <Text style={styles.value}>
 
-                {invoice.order.estimated_days} Days
+                7 - 28 Days
 
               </Text>
 

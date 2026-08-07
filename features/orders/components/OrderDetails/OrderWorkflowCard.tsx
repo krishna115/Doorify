@@ -131,9 +131,13 @@ export function OrderWorkflowCard({
 
     <Card>
 
-      <CardHeader>
+      {/* =====================================
+          HEADER
+      ====================================== */}
 
-        <CardTitle>
+      <CardHeader className="px-4 py-4 sm:px-6">
+
+        <CardTitle className="text-base sm:text-lg">
 
           Order Workflow
 
@@ -141,13 +145,13 @@ export function OrderWorkflowCard({
 
       </CardHeader>
 
-      <CardContent className="space-y-8">
+      <CardContent className="space-y-5 px-4 pb-4 sm:space-y-8 sm:px-6 sm:pb-6">
 
-        {/* -------------------------------- */}
-        {/* Progress */}
-        {/* -------------------------------- */}
+        {/* =====================================
+            PROGRESS
+        ====================================== */}
 
-        <div className="flex items-center justify-between">
+        <div className="flex w-full items-start">
 
           {STEPS.map(
 
@@ -163,39 +167,86 @@ export function OrderWorkflowCard({
                 index <=
                 currentIndex;
 
+              const completed =
+                index <
+                currentIndex;
+
               return (
 
                 <div
                   key={step.key}
-                  className="flex flex-1 items-center"
+                  className="flex min-w-0 flex-1 items-start"
                 >
 
-                  <div className="flex flex-col items-center">
+                  {/* ---------------------------------
+                      Step
+                  ---------------------------------- */}
+
+                  <div className="flex min-w-0 flex-col items-center">
 
                     <div
                       className={`
-                      flex h-12 w-12 items-center justify-center rounded-full border-2
-                      ${
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-muted bg-background text-muted-foreground"
-                      }
-                    `}
+                        flex
+                        h-8
+                        w-8
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        border-2
+
+                        sm:h-10
+                        sm:w-10
+                        
+                        ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-muted bg-background text-muted-foreground"
+                        }
+                      `}
                     >
 
                       {active ? (
 
-                        <Icon className="h-5 w-5" />
+                        <Icon
+                          className="
+                            h-3.5
+                            w-3.5
+                            sm:h-4
+                            sm:w-4
+                          "
+                        />
 
                       ) : (
 
-                        <Circle className="h-5 w-5" />
+                        <Circle
+                          className="
+                            h-3.5
+                            w-3.5
+                            sm:h-4
+                            sm:w-4
+                          "
+                        />
 
                       )}
 
                     </div>
 
-                    <span className="mt-2 text-xs font-medium">
+                    <span
+                      className="
+                        mt-1
+                        max-w-[58px]
+                        truncate
+                        text-center
+                        text-[9px]
+                        font-medium
+                        leading-tight
+
+                        sm:mt-2
+                        sm:max-w-none
+                        sm:text-xs
+                      "
+                    >
 
                       {step.label}
 
@@ -203,19 +254,31 @@ export function OrderWorkflowCard({
 
                   </div>
 
+                  {/* ---------------------------------
+                      Connector
+                  ---------------------------------- */}
+
                   {index !==
                     STEPS.length - 1 && (
 
                     <div
                       className={`
-                      h-1 flex-1 mx-2 rounded-full
-                      ${
-                        index <
-                        currentIndex
-                          ? "bg-primary"
-                          : "bg-muted"
-                      }
-                    `}
+                        mt-4
+                        h-0.5
+                        min-w-[6px]
+                        flex-1
+                        rounded-full
+
+                        sm:mx-2
+                        sm:mt-5
+                        sm:h-1
+
+                        ${
+                          completed
+                            ? "bg-primary"
+                            : "bg-muted"
+                        }
+                      `}
                     />
 
                   )}
@@ -230,23 +293,23 @@ export function OrderWorkflowCard({
 
         </div>
 
-        {/* -------------------------------- */}
-        {/* Status */}
-        {/* -------------------------------- */}
+        {/* =====================================
+            STATUS
+        ====================================== */}
 
-        <div className="rounded-lg border p-5">
+        <div className="rounded-lg border p-4 sm:p-5">
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between gap-3">
 
-            <div>
+            <div className="min-w-0">
 
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:text-sm">
 
                 Current Status
 
               </p>
 
-              <h3 className="text-xl font-bold mt-1">
+              <h3 className="mt-1 text-lg font-bold capitalize sm:text-xl">
 
                 {order.status
                   .replaceAll(
@@ -263,7 +326,7 @@ export function OrderWorkflowCard({
 
             </div>
 
-            <Badge>
+            <Badge className="shrink-0 text-xs">
 
               {order.order_number}
 
@@ -271,21 +334,25 @@ export function OrderWorkflowCard({
 
           </div>
 
+          {/* =====================================
+              PENDING
+          ====================================== */}
+
           {order.status ===
             "pending" && (
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-5 space-y-4">
 
               <div>
 
-                <Label>
+                <Label className="text-sm">
 
                   Estimated Days
 
                 </Label>
 
                 <Input
-                  className="mt-2 w-40"
+                  className="mt-2 h-9 w-full sm:w-40"
                   type="number"
                   min={1}
                   value={
@@ -308,10 +375,14 @@ export function OrderWorkflowCard({
 
           )}
 
+          {/* =====================================
+              ACCEPTED
+          ====================================== */}
+
           {order.status ===
             "accepted" && (
 
-            <div className="mt-5 rounded-md bg-muted p-4 text-sm">
+            <div className="mt-4 rounded-md bg-muted p-3 text-xs leading-relaxed sm:p-4 sm:text-sm">
 
               Inventory has already been reserved.
 
@@ -323,27 +394,37 @@ export function OrderWorkflowCard({
 
           )}
 
+          {/* =====================================
+              MANUFACTURING
+          ====================================== */}
+
           {order.status ===
             "manufacturing" && (
 
-            <div className="mt-5 rounded-md bg-muted p-4 text-sm">
+            <div className="mt-4 rounded-md bg-muted p-3 text-xs leading-relaxed sm:p-4 sm:text-sm">
 
               Complete the manufacturing checklist.
 
-              Once everything is finished,
+              <br />
 
-              mark the order as completed.
+              Once everything is finished, mark the order as completed.
 
             </div>
 
           )}
 
+          {/* =====================================
+              COMPLETED
+          ====================================== */}
+
           {order.status ===
             "completed" && (
 
-            <div className="mt-5 rounded-md bg-muted p-4 text-sm">
+            <div className="mt-4 rounded-md bg-muted p-3 text-xs leading-relaxed sm:p-4 sm:text-sm">
 
               Manufacturing has finished.
+
+              <br />
 
               Move the order to Ready For Dispatch.
 
@@ -351,12 +432,16 @@ export function OrderWorkflowCard({
 
           )}
 
+          {/* =====================================
+              READY
+          ====================================== */}
+
           {order.status ===
             "ready_for_dispatch" && (
 
-            <div className="mt-5 rounded-md bg-green-50 border border-green-300 p-4">
+            <div className="mt-4 rounded-md border border-green-300 bg-green-50 p-3 sm:p-4">
 
-              <p className="font-medium text-green-700">
+              <p className="text-sm font-medium text-green-700">
 
                 Order is ready for dispatch.
 
@@ -366,11 +451,19 @@ export function OrderWorkflowCard({
 
           )}
 
+          {/* =====================================
+              ACTION
+          ====================================== */}
+
           {action && (
 
             <Button
-              className="mt-6"
-              size="lg"
+              className="
+                mt-5
+                w-full
+                sm:w-auto
+              "
+              size="default"
               onClick={onAction}
             >
 

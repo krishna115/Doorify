@@ -64,6 +64,16 @@ export default function LoginPage() {
             password
           );
 
+        const sessionData =
+  await AuthService.getSession();
+
+console.log(
+  "SESSION AFTER LOGIN:",
+  sessionData.session
+);
+
+
+
         console.log(
           "STEP 2 : Login Success"
         );
@@ -233,33 +243,24 @@ export default function LoginPage() {
           ----------------------------- */}
 
           <button
-            onClick={
-              handleSignIn
-            }
-            disabled={
-              loading
-            }
-            className="flex w-full items-center justify-center rounded-md bg-primary py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+  type="button"
+  onPointerDown={(e) => {
+    e.preventDefault();
 
-            {loading ? (
-
-              <>
-
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-
-                Logging In...
-
-              </>
-
-            ) : (
-
-              "Sign In"
-
-            )}
-
-          </button>
-
+    handleSignIn();
+  }}
+  disabled={loading}
+  className="flex w-full items-center justify-center rounded-md bg-primary py-3 font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {loading ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Logging In...
+    </>
+  ) : (
+    "Sign In"
+  )}
+</button>
         </div>
 
       </div>

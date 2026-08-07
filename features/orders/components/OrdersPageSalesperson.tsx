@@ -8,7 +8,6 @@ import {
 import {
   Order,
   OrderDialog,
-  OrdersTable,
   OrderService,
 } from "@/features/orders";
 
@@ -26,40 +25,9 @@ import {
 import {
   Button,
 } from "@/components/ui/button";
+import { OrdersSalespersonTable } from "./OrdersSalespersonTable";
 
-/*
------------------------------------------
-Order Filters
------------------------------------------
-*/
 
-export interface OrdersPageFilters {
-
-  /**
-   * Orders created by this salesperson/user.
-   * Maps to orders.created_by
-   */
-  createdBy?: string;
-
-  /**
-   * Orders assigned to this manufacturer/user.
-   * Maps to orders.assigned_to
-   */
-  acceptedBy?: string;
-
-  /**
-   * Filter by a single status.
-   * Maps to orders.status
-   */
-  status?: Order["status"];
-
-  /**
-   * Filter by multiple statuses.
-   * Maps to orders.status IN (...)
-   */
-  statuses?: Order["status"][];
-
-}
 /*
 -----------------------------------------
 Props
@@ -80,23 +48,19 @@ interface Props {
 
   };
 
-  filters?: OrdersPageFilters;
-
 }
 
 /*
 -----------------------------------------
-Orders Page
+Orders Page By Salesperson
 -----------------------------------------
 */
 
-export default function OrdersPage2({
+export default function OrdersPageSalesperson({
 
   basePath,
 
   permissions,
-
-  filters,
 
 }: Props) {
 
@@ -176,36 +140,8 @@ export default function OrdersPage2({
 
       setLoading(true);
 
-      /*
-      -----------------------------------
-      No Filters
-      -----------------------------------
-
-      If no filters are provided,
-      fetch all orders.
-      */
-
-      if (!filters) {
-
-        const data =
-          await OrderService.getAll();
-
-        setOrders(data);
-
-        return;
-
-      }
-
-      /*
-      -----------------------------------
-      Build Filters
-      -----------------------------------
-      */
-
       const data =
-        await OrderService.getAll(
-          filters
-        );
+        await OrderService.getAll();
 
       setOrders(data);
 
@@ -224,27 +160,11 @@ export default function OrdersPage2({
 
   }
 
-  /*
-  ---------------------------------------
-  Reload when filters change
-  ---------------------------------------
-  */
-
   useEffect(() => {
 
     loadOrders();
 
-  }, [
-
-    filters?.createdBy,
-
-    filters?.acceptedBy,
-
-    filters?.status,
-
-    filters?.statuses?.join(","),
-
-  ]);
+  }, []);
 
   /*
   ---------------------------------------
@@ -287,7 +207,7 @@ export default function OrdersPage2({
   ) {
 
     const confirmed =
-      confirm(
+      window.confirm(
         `Delete Order #${order.order_number}?`
       );
 
@@ -390,13 +310,14 @@ export default function OrdersPage2({
 
             <h1 className="text-3xl font-bold">
 
-              Orders
+              Orders by Salesperson
 
             </h1>
 
             <p className="text-muted-foreground">
 
-              Manage customer orders.
+              View customer orders grouped by
+              salesperson.
 
             </p>
 
@@ -419,10 +340,10 @@ export default function OrdersPage2({
         </div>
 
         {/* =================================
-            Orders Table
+            Orders
         ================================== */}
 
-        <OrdersTable
+        <OrdersSalespersonTable
 
           orders={
             orders
@@ -433,13 +354,11 @@ export default function OrdersPage2({
           }
 
           permissions={{
-
             canEdit:
               permissions.canEdit,
 
             canDelete:
               permissions.canDelete,
-
           }}
 
           onEdit={
@@ -519,10 +438,6 @@ export default function OrdersPage2({
 
               try {
 
-                console.log(
-                  "Downloading Invoice..."
-                );
-
                 await InvoicePdfService.download(
                   invoice
                 );
@@ -543,10 +458,6 @@ export default function OrdersPage2({
             async () => {
 
               try {
-
-                console.log(
-                  "Sharing Invoice..."
-                );
 
                 await InvoicePdfService.share(
                   invoice
@@ -601,10 +512,6 @@ export default function OrdersPage2({
 
               try {
 
-                console.log(
-                  "Downloading Invoice From Share Dialog..."
-                );
-
                 await InvoicePdfService.download(
                   invoice
                 );
@@ -625,10 +532,6 @@ export default function OrdersPage2({
             async () => {
 
               try {
-
-                console.log(
-                  "Sharing Invoice From Share Dialog..."
-                );
 
                 await InvoicePdfService.share(
                   invoice
