@@ -62,6 +62,81 @@ export class AuthService {
     return data as UserProfile;
   }
 
+  static async getCurrentUser() {
+
+  /*
+  -----------------------------------------
+  Get current Supabase session
+  -----------------------------------------
+  */
+
+  const {
+    session,
+  } = await this.getSession();
+
+
+  if (!session) {
+
+    throw new Error(
+      "No active session."
+    );
+
+  }
+
+
+  /*
+  -----------------------------------------
+  Get user profile
+  -----------------------------------------
+  */
+
+  const {
+    data: profile,
+    error,
+  } = await this.supabase
+    .from("profiles")
+    .select(`
+      id,
+      name,
+      role
+    `)
+    .eq(
+      "id",
+      session.user.id
+    )
+    .single();
+
+
+  if (error) {
+
+    console.error(
+      "Failed to load current user profile:",
+      error
+    );
+
+    throw new Error(
+      "Unable to load your profile."
+    );
+
+  }
+
+
+  /*
+  -----------------------------------------
+  Return user + profile
+  -----------------------------------------
+  */
+
+  return {
+
+    user: session.user,
+
+    profile,
+
+  };
+
+}
+
   static getDashboard(
     role: UserRole
   ) {
